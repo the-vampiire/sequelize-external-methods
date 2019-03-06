@@ -3,7 +3,9 @@
 - Defining methods externally helps clean up the Model definition
 - Defining methods externally helps make testing easier as each method is independent of Sequelize / a Model so its dependency on them can be easily mocked
 
-## How to define models as directories instead of files
+Cut to the chase and see an example usage [in the example/ directory](/example)
+
+## How to define Sequelize models as directories instead of files
 - A predicate to defining external methods (while keeping the code organized) is to keep Model and method definitions in a directory rather than a single file
 - To do this requires a slight modification to the default (`sequelize init`) `models/index.js` file
 - This modification is backwards compatible and supports both Model files and directories
