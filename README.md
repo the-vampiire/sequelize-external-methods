@@ -131,11 +131,18 @@ Method Objects
   - accessing the method: `modelInstance.prototypeMethodName`
   - Sequelize equivalent: `Model.prototype.prototypeMethodName = function() {...}`
 - `getterMethods`: loaded into the Model def `getterMethods` (**instance methods**)
-  - accessing the method: `modelInstance.getterMethodName`
+  - these are standard property getters / virtual getters
+  - they are defined as methods but used as normal properties to get property values
+  - note: these are accessed as properties on the instance
+  - accessing the "method" (get property value): `modelInstance.getterMethodName`
 - `setterMethods`: loaded into the Model def `setterMethods`. (**instance methods**) 
-  - accessing the method: `modelInstance.setterMethodName`
+  - these are standard property seters / virtual setters
+  - they are defined as methods but used as normal properties to set property values
+  - note: these are accessed as properties on the instance
+  - accessing the "method" (set property value): `modelInstance.setterMethodName = someNewValue`
 
 Sequelize equivalent for `getter`/`setterMethods`:
+- [read about getters/setters here](http://docs.sequelizejs.com/manual/tutorial/models-definition.html#getters-setters)
 
 `models/modelName/index.js`
 ```js
