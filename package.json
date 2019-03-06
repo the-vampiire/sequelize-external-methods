@@ -1,0 +1,31 @@
+{
+  "name": "sequelize-external-methods",
+  "version": "0.0.1",
+  "description": "Allows externally defined methods to be loaded onto a Sequelize Model",
+  "main": "lib/index.js",
+  "directories": {
+    "lib": "lib",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/the-vampiire/sequelize-external-methods.git"
+  },
+  "keywords": [
+    "sequelize",
+    "external",
+    "methods"
+  ],
+  "author": "Vampiire",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/the-vampiire/sequelize-external-methods/issues"
+  },
+  "homepage": "https://github.com/the-vampiire/sequelize-external-methods#readme",
+  "devDependencies": {
+    "jest": "^24.1.0"
+  }
+}
