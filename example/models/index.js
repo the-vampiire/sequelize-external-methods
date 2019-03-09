@@ -10,6 +10,7 @@ var db        = {};
 
 var sequelize = new Sequelize(config.database, config.username, config.password, config);
 
+// exports file or directory based Models
 fs
   .readdirSync(__dirname)
   .filter(file => file !== basename)
