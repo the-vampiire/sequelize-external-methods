@@ -5,7 +5,8 @@
   "main": "lib/index.js",
   "directories": {
     "lib": "lib",
-    "test": "tests"
+    "test": "tests",
+    "example": "example"
   },
   "scripts": {
     "test": "jest"
@@ -19,7 +20,7 @@
     "external",
     "methods"
   ],
-  "author": "Vampiire",
+  "author": "Vamp",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/the-vampiire/sequelize-external-methods/issues"
@@ -27,5 +28,10 @@
   "homepage": "https://github.com/the-vampiire/sequelize-external-methods#readme",
   "devDependencies": {
     "jest": "^24.1.0"
+  },
+  "peerDependencies": {
+    "jest": "24.x.x",
+    "sequelize": "4.x.x",
+    "sequelize-cli": "5.x.x"
   }
 }
