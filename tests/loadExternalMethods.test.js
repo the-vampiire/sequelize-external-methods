@@ -1,3 +1,4 @@
+const Sequelize = require('sequelize');
 const {
   overrideWarning,
   loadGetters,
@@ -7,15 +8,8 @@ const {
   loadExternalMethods
 } = require('../lib');
 
-const Model = {
-  prototype: {
-    // sequelize Model.prototype props
-    _customGetters: {},
-    _customSetters: {},
-    _hasCustomGetters: 0,
-    _hasCustomSetters: 0,
-  },
-};
+// dialect required for instantiation but util works across all dialects
+const sequelize = new Sequelize({ dialect: 'postgres' });
 
 const methodDef = 'methodDef';
 const methods = {
@@ -39,118 +33,131 @@ describe('overrideWarning: produces a warning message when a method is overridde
 });
 
 describe('loadGetters: loads getterMethods onto a Model', () => {
-  test('loads Model getter methods, increments prototype._hasCustomGetters', () => {
-    const modelMock = { ...Model };
+  test('loads Model getter methods', () => {
+    const modelMock = sequelize.define('Model');
     const getterMethods = { ...methods.getterMethods };
 
     loadGetters(modelMock, getterMethods);
     expect(modelMock.prototype._customGetters.getterName).toBe(methodDef);
     expect(modelMock.prototype._hasCustomGetters).toBe(1);
+
+    delete sequelize.models.Model;
   });
 
-  test('merges with existing Model getter methods, increments prototype._hasCustomGetters', () => {
+  test('merges with existing Model getter methods', () => {
     const existingDef = 'existingDef';
-    const modelMock = { prototype: { _customGetters: { otherName: existingDef }, _hasCustomGetters: 1 } };
     const getterMethods = { ...methods.getterMethods };
+    modelMock = sequelize.define('Model', {}, { getterMethods: { otherName: existingDef }});
 
     loadGetters(modelMock, getterMethods);
     expect(modelMock.prototype._customGetters.getterName).toBe(methodDef);
     expect(modelMock.prototype._customGetters.otherName).toBe(existingDef);
     expect(modelMock.prototype._hasCustomGetters).toBe(2);
+
+    delete sequelize.models.Model;
   });
 
   describe('method overriding behavior', () => {
     const existingDef = 'existingDef';
-    const modelMock = { prototype: { _customGetters: { getterName: existingDef }, _hasCustomGetters: 1 } };
     const getterMethods = { ...methods.getterMethods };
-    
+    modelMock = sequelize.define('Model', {}, { getterMethods: { getterName: existingDef }});
     afterEach(() => jest.clearAllMocks());
+    afterAll(() => { delete sequelize.models.Model; });
 
-    test('emits console.warn, does not increment prototype._hasCustomGetters', () => {
+    test('emits console.warn', () => {
       loadGetters(modelMock, getterMethods);
       expect(consoleWarnSpy).toBeCalledWith(overrideWarning('getterMethods', 'getterName'));
       expect(modelMock.prototype._customGetters.getterName).toBe(methodDef);
-      expect(modelMock.prototype._hasCustomGetters).toBe(1);
     });
 
-    test('warn = false: does not emit console.warn, does not increment prototype._hasCustomGetters', () => {
+    test('warn = false: does not emit console.warn', () => {
       loadGetters(modelMock, getterMethods, false);
       expect(consoleWarnSpy).not.toBeCalled();
       expect(modelMock.prototype._customGetters.getterName).toBe(methodDef);
-      expect(modelMock.prototype._hasCustomGetters).toBe(1);
     });
   });
 });
 
 describe('loadSetters: loads setterMethods onto a Model', () => {
-  test('loads Model setter methods, increments prototype._hasCustomSetters', () => {
-    const modelMock = { ...Model };
+  test('loads Model setter methods', () => {
+    const modelMock = sequelize.define('Model');
     const setterMethods = { ...methods.setterMethods };
 
     loadSetters(modelMock, setterMethods);
     expect(modelMock.prototype._customSetters.setterName).toBe(methodDef);
     expect(modelMock.prototype._hasCustomSetters).toBe(1);
+
+    delete sequelize.models.Model;
   });
 
-  test('merges with existing Model setter methods, increments prototype._hasCustomSetters', () => {
+  test('merges with existing Model setter methods', () => {
     const existingDef = 'existingDef';
-    const modelMock = { prototype: { _customSetters: { otherName: existingDef }, _hasCustomSetters: 1 } };
     const setterMethods = { ...methods.setterMethods };
+    modelMock = sequelize.define('Model', {}, { setterMethods: { otherName: existingDef }});
 
     loadSetters(modelMock, setterMethods);
     expect(modelMock.prototype._customSetters.setterName).toBe(methodDef);
     expect(modelMock.prototype._customSetters.otherName).toBe(existingDef);
     expect(modelMock.prototype._hasCustomSetters).toBe(2);
+
+    delete sequelize.models.Model;
   });
 
   describe('method overriding behavior', () => {
     const existingDef = 'existingDef';
-    const modelMock = { prototype: { _customSetters: { setterName: existingDef }, _hasCustomSetters: 1 } };
     const setterMethods = { ...methods.setterMethods };
-    
+    modelMock = sequelize.define('Model', {}, { setterMethods: { setterName: existingDef }});
     afterEach(() => jest.clearAllMocks());
+    afterAll(() => { delete sequelize.models.Model; });
 
-    test('emits console.warn, does not increment prototype._hasCustomSetters', () => {
+    test('emits console.warn', () => {
       loadSetters(modelMock, setterMethods);
       expect(consoleWarnSpy).toBeCalledWith(overrideWarning('setterMethods', 'setterName'));
       expect(modelMock.prototype._customSetters.setterName).toBe(methodDef);
-      expect(modelMock.prototype._hasCustomSetters).toBe(1);
     });
 
-    test('warn = false: does not emit console.warn, does not increment prototype._hasCustomSetters', () => {
+    test('warn = false: does not emit console.warn', () => {
       loadSetters(modelMock, setterMethods, false);
       expect(consoleWarnSpy).not.toBeCalled();
       expect(modelMock.prototype._customSetters.setterName).toBe(methodDef);
-      expect(modelMock.prototype._hasCustomSetters).toBe(1);
     });
   });
 });
 
 describe('loadPrototypes: loads prototype methods onto a Model', () => {
   test('loads Model prototype methods', () => {
-    const modelMock = { ...Model };
+    const modelMock = sequelize.define('Model');
     const prototypeMethods = { ...methods.prototypeMethods };
 
     loadPrototypes(modelMock, prototypeMethods);
     expect(modelMock.prototype.prototypeName).toBe(methodDef);
+
+    delete sequelize.models.Model;
   });
 
   test('merges with existing Model prototype methods', () => {
     const existingDef = 'existingDef';
-    const modelMock = { prototype: { otherName: existingDef } };
     const prototypeMethods = { ...methods.prototypeMethods };
+
+    const modelMock = sequelize.define('Model');
+    modelMock.prototype.otherName = existingDef;
 
     loadPrototypes(modelMock, prototypeMethods);
     expect(modelMock.prototype.prototypeName).toBe(methodDef);
     expect(modelMock.prototype.otherName).toBe(existingDef);
+
+    delete sequelize.models.Model;
   });
 
   describe('method overriding behavior', () => {
     const existingDef = 'existingDef';
-    const modelMock = { prototype: { prototypeName: existingDef } };
     const prototypeMethods = { ...methods.prototypeMethods };
     
+    const modelMock = sequelize.define('Model');
+    modelMock.prototype.prototypeName = existingDef;
+    
     afterEach(() => jest.clearAllMocks());
+    afterAll(() => { delete sequelize.models.Model; });
 
     test('emits console.warn', () => {
       loadPrototypes(modelMock, prototypeMethods);
@@ -168,29 +175,38 @@ describe('loadPrototypes: loads prototype methods onto a Model', () => {
 
 describe('loadStatics: loads static methods onto a Model', () => {
   test('loads Model static methods', () => {
-    const modelMock = { ...Model };
+    const modelMock = sequelize.define('Model');
     const staticMethods = { ...methods.staticMethods };
 
     loadStatics(modelMock, staticMethods);
     expect(modelMock.staticName).toBe(methodDef);
+
+    delete sequelize.models.Model;
   });
 
   test('merges with existing Model static methods', () => {
     const existingDef = 'existingDef';
-    const modelMock = { otherName: existingDef };
     const staticMethods = { ...methods.staticMethods };
+
+    const modelMock = sequelize.define('Model');
+    modelMock.otherName = existingDef;
 
     loadStatics(modelMock, staticMethods);
     expect(modelMock.staticName).toBe(methodDef);
     expect(modelMock.otherName).toBe(existingDef);
+
+    delete sequelize.models.Model;
   });
 
   describe('method overriding behavior', () => {
     const existingDef = 'existingDef';
-    const modelMock = { staticName: existingDef };
     const staticMethods = { ...methods.staticMethods };
+
+    const modelMock = sequelize.define('Model');
+    modelMock.staticName = existingDef;
     
     afterEach(() => jest.clearAllMocks());
+    afterAll(() => { delete sequelize.models.Model; });
 
     test('emits console.warn', () => {
       loadStatics(modelMock, staticMethods);
@@ -207,11 +223,10 @@ describe('loadStatics: loads static methods onto a Model', () => {
 });
 
 describe('loadExternalMethods: loads external getter, setter, prototype, and static methods onto a Model', () => {
-  const modelMock = JSON.parse(JSON.stringify(Model)); // prevent mutation of referenced sub-property objects!
-  const methodsMock = { ...methods };
+  const modelMock = sequelize.define('Model');
   
   afterEach(() => jest.clearAllMocks());
-  beforeAll(() => loadExternalMethods(modelMock, methodsMock));
+  beforeAll(() => loadExternalMethods(modelMock, methods));
 
   test('loads Model static methods', () => {
     expect(modelMock.staticName).toBe(methodDef);
@@ -233,11 +248,13 @@ describe('loadExternalMethods: loads external getter, setter, prototype, and sta
     test('emits console.warn', () => {
       loadExternalMethods(modelMock, { staticMethods: { staticName: 'new val' } });
       expect(consoleWarnSpy).toBeCalledWith(overrideWarning('static', 'staticName'));
+      expect(modelMock.staticName).toBe('new val');
     });
 
     test('warn = false: does not emit console.warn', () => {
-      loadExternalMethods(modelMock, { staticMethods: { staticName: 'new val' } }, false);
+      loadExternalMethods(modelMock, { staticMethods: { staticName: 'final val' } }, false);
       expect(consoleWarnSpy).not.toBeCalled();
+      expect(modelMock.staticName).toBe('final val');
     });
   });
 });
