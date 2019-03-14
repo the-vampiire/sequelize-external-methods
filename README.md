@@ -257,23 +257,10 @@ Say we have the follow structure to our `models/` dir:
 ```
 
 # `loadExternalMethods` and utilities
-You can use them individually but the recommended usage is with `loadExternalMethods` itself since you can load as many or as few external methods as you'd like with it. Whatever Named Method Objects it receives will be loaded onto the target Model.
-
-## Technical details
-Sequelize converts `options.getterMethods` and `options.setterMethods` from the `sequelize.define(name, attributes, options)` call in special sub-properties of the Model prototype object. I only know this because I'm insane and insisted on getting this to work - their docs nor code lists this anywhere.
-
-`options.getterMethods`
-- stored in `Model.prototype._customGetters`
-- counted by `Model.prototype._hasCustomGetters`
-
-`options.setterMethods`
-- stored in `Model.prototype._customSetters`
-- counted by `Model.prototype._hasCustomSetters`
-
-`loadGetters`, `loadSetters`, and the composer function `loadExternalMethods` takes care of managing the loading locations and counters automatically.
+You can use them individually but the recommended usage is with `loadExternalMethods` itself since you can load as many or as few external methods as you'd like with it. Whatever Named Method Objects it receives will be loaded onto the target Model. If you choose to only load a specific set you can use the following utilities.
 
 ## Utilities
-`loadGetters`
+`loadGetters`: only loads (instance) `getterMethods`
 ```js
 /**
  * Loads virtual getter methods onto the Model
@@ -289,19 +276,18 @@ Sequelize converts `options.getterMethods` and `options.setterMethods` from the 
  * @param {boolean} warn [true] set false to suppress merge override warning
  */
 const loadGetters = (Model, getterMethods, warn = true) => {
-  for (const [getterName, method] of Object.entries(getterMethods)) {
+  for (const getterName of Object.keys(getterMethods)) {
     const methodWillOverride = getterName in Model.prototype._customGetters;
     if (methodWillOverride) {
       warn && console.warn(overrideWarning('getterMethods', getterName));
     }
-    
-    Model.prototype._customGetters[getterName] = method;
-    if (!methodWillOverride) ++Model.prototype._hasCustomGetters;
   }
+  Model.options.getterMethods = { ...Model.options.getterMethods, ...getterMethods };
+  Model.refreshAttributes();
 };
 ```
 
-`loadSetters`
+`loadSetters`: only loads (instance) `setterMethods`
 ```js
 /**
  * Loads virtual setter methods onto the Model
@@ -317,19 +303,18 @@ const loadGetters = (Model, getterMethods, warn = true) => {
  * @param {boolean} warn [true] set false to suppress merge override warning
  */
 const loadSetters = (Model, setterMethods, warn = true) => {
-  for (const [setterName, method] of Object.entries(setterMethods)) {
+  for (const setterName of Object.keys(setterMethods)) {
     const methodWillOverride = setterName in Model.prototype._customSetters;
     if (methodWillOverride) {
       warn && console.warn(overrideWarning('setterMethods', setterName));
     }
-
-    Model.prototype._customSetters[setterName] = method;
-    if (!methodWillOverride) ++Model.prototype._hasCustomSetters;
   }
+  Model.options.setterMethods = { ...Model.options.setterMethods, ...setterMethods };
+  Model.refreshAttributes();
 };
 ```
 
-`loadStatics`
+`loadStatics`: only loads `static` (Model) methods
 ```js
 /**
  * Loads static methods onto the Model
@@ -352,7 +337,7 @@ const loadStatics = (Model, staticMethods, warn = true) => {
 }
 ```
 
-`loadPrototypes`
+`loadPrototypes`: only loads `prototype` (instance) methods
 ```js
 /**
  * Loads prototype (instance) methods onto the Model
@@ -370,7 +355,10 @@ const loadPrototypes = (Model, prototypeMethods, warn = true) => {
     if (prototypeName in Model.prototype) {
       warn && console.warn(overrideWarning('prototype', prototypeName));
     }
-    Model.prototype[prototypeName] = method;
+    Object.defineProperty(Model.prototype, prototypeName, {
+      value: method,
+      enumerable: true,
+    });
   }
 }
 ```
